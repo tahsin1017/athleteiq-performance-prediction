@@ -8,17 +8,12 @@ __pycache__/
 # Jupyter
 .ipynb_checkpoints/
 
-# Virtual environments
-.env
-.venv
-venv/
-
-# VS Code
+# VSCode
 .vscode/
 
-# Model files
-*.pkl
-*.joblib
+# Models
+models/*.pkl
+models/*.joblib
 
-# Logs
-*.log
+# Environment
+.env
