@@ -1,0 +1,13 @@
+Metric,Value
+Training rows,299.0
+Unique training profiles,122.0
+Test rows,75.0
+Unique test profiles,54.0
+Unique profiles appearing in both train and test,44.0
+Test rows with profile seen in training,65.0
+Test overlap percentage,86.66666666666667
+Total unique predictor profiles,132.0
+Repeated predictor profiles,78.0
+Profiles with multiple target values,0.0
+Rows belonging to repeated profiles,320.0
+Percentage rows belonging to repeated profiles,85.56149732620321

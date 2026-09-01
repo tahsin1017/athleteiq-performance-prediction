@@ -597,3 +597,371 @@ The Random Forest model remains the strongest candidate, but its unusually high 
 - Evaluate model performance after removing potentially dominant features if necessary.
 - Begin model interpretation.
 - Prepare for hyperparameter tuning only after the model's behavior is better understood.
+
+
+
+---
+
+## Day 8
+
+### Objective
+
+Interpret the Random Forest model, identify which features contribute most strongly to its predictions, and investigate possible explanations for the unusually high predictive performance observed during baseline evaluation and cross-validation.
+
+### Tasks Completed
+
+- Created `06_feature_importance_and_leakage.ipynb`.
+- Loaded the processed training and testing datasets.
+- Recreated the Random Forest model used during baseline evaluation.
+- Confirmed that `Quality of Sleep` was not present in the predictor matrix.
+- Confirmed that the feature matrices contained no missing values.
+- Confirmed that all model features were numeric.
+- Reproduced the held-out Random Forest performance from Day 7.
+- Calculated impurity-based Random Forest feature importance.
+- Calculated permutation importance using the held-out test dataset.
+- Compared model importance with feature-target correlations.
+- Investigated repeated predictor profiles within the training and testing datasets.
+- Investigated exact predictor-profile overlap between training and testing data.
+- Examined whether identical predictor profiles were associated with different Quality of Sleep values.
+- Performed feature-ablation experiments.
+- Evaluated model performance after removing Sleep Duration.
+- Evaluated model performance after removing Stress Level.
+- Evaluated model performance after removing both Sleep Duration and Stress Level.
+- Evaluated the effect of removing Sleep Disorder features.
+- Saved interpretation and diagnostic results to the `reports/` directory.
+- Saved feature-importance and ablation visualizations to the `figures/` directory.
+- Restarted the notebook kernel and successfully executed the complete notebook from top to bottom without errors.
+
+### Random Forest Performance
+
+The Random Forest reproduced the strong held-out performance observed during Day 7:
+
+- Test MAE: **0.0391**
+- Test RMSE: **0.1338**
+- Test R²: **0.9881**
+
+This confirmed that the model used for the Day 8 interpretation analysis was consistent with the model previously evaluated.
+
+### Feature Importance
+
+The impurity-based Random Forest feature importance showed that the model relied most strongly on:
+
+1. `Sleep Duration` — **0.7941**
+2. `Stress Level` — approximately **0.1009**
+3. `Occupation_Doctor` — approximately **0.0356**
+4. `Heart Rate` — approximately **0.0340**
+5. `Daily Steps` — approximately **0.0090**
+
+`Sleep Duration` dominated the impurity-based feature importance, accounting for approximately 79% of the total importance assigned by the Random Forest.
+
+### Permutation Importance
+
+Permutation importance produced a similar ranking.
+
+The most important features were:
+
+1. `Sleep Duration` — **1.1514**
+2. `Stress Level` — **0.1247**
+3. `Occupation_Doctor` — **0.0550**
+4. `Heart Rate` — **0.0473**
+5. `Daily Steps` — **0.0174**
+6. `Age` — **0.0141**
+
+The permutation importance value for Sleep Duration indicates that randomly shuffling this feature caused a very large reduction in model R².
+
+Because permutation importance measures the loss in predictive performance after disrupting a feature, values can exceed 1.0 when shuffling a highly informative feature causes the model to perform substantially worse than its original prediction performance.
+
+The agreement between impurity-based importance and permutation importance strengthens the conclusion that Sleep Duration is the dominant feature used by the Random Forest.
+
+### Feature Importance Interpretation
+
+The importance analysis does not establish that Sleep Duration causes Quality of Sleep.
+
+Instead, it shows that the Random Forest depends heavily on Sleep Duration when making predictions within this dataset.
+
+Other variables such as Stress Level, Heart Rate, occupation, Daily Steps, and Age also contribute information, but their contributions are substantially smaller.
+
+The model therefore appears to obtain most of its predictive power from a relatively small subset of features.
+
+### Relationship to Exploratory Analysis
+
+The feature-importance results were consistent with the relationships identified during exploratory data analysis.
+
+The strongest numerical correlations with Quality of Sleep in the training data were:
+
+- Stress Level: **r = -0.8946**
+- Sleep Duration: **r = 0.8842**
+- Heart Rate: **r = -0.6408**
+- Age: **r = 0.4523**
+- `Occupation_Engineer`: **r = 0.3980**
+
+These findings broadly agree with the Day 3 exploratory analysis, where Sleep Duration and Stress Level were identified as the strongest relationships with Quality of Sleep.
+
+An important observation is that Stress Level has a slightly stronger absolute linear correlation with Quality of Sleep than Sleep Duration, while the Random Forest assigns much greater predictive importance to Sleep Duration.
+
+This demonstrates that correlation and model feature importance measure different types of relationships.
+
+### Train-Test Profile Analysis
+
+A major finding from Day 8 was the presence of substantial repetition in the predictor data.
+
+The training dataset contained:
+
+- Training rows: **299**
+- Unique training predictor profiles: **122**
+- Repeated training rows relative to unique profiles: **177**
+
+The test dataset contained:
+
+- Test rows: **75**
+- Unique test predictor profiles: **54**
+- Repeated test rows relative to unique profiles: **21**
+
+When the training and test sets were compared directly:
+
+- Unique predictor profiles appearing in both training and testing data: **44**
+- Test rows whose exact predictor profile appeared during training: **65 / 75**
+- Percentage of test rows with a predictor profile previously seen during training: **86.67%**
+
+This is a major methodological finding.
+
+Although the test set was technically held out from model training, most test observations had an exact predictor profile that had already appeared in the training dataset.
+
+Therefore, the random train-test split does not provide a fully independent evaluation of performance on unseen participant profiles.
+
+### Dataset Profile Structure
+
+Across all 374 observations:
+
+- Total unique predictor profiles: **132**
+- Repeated predictor profiles: **78**
+- Predictor profiles associated with multiple Quality of Sleep values: **0**
+- Rows belonging to repeated predictor profiles: **320 / 374**
+- Percentage of rows belonging to repeated predictor profiles: **85.56%**
+
+This means that only 132 unique predictor combinations exist across 374 observations.
+
+Furthermore, 320 observations belong to profiles that occur more than once.
+
+Most importantly, none of the repeated predictor profiles were associated with more than one Quality of Sleep value.
+
+In other words, within this dataset, identical predictor profiles always mapped to the same target value.
+
+This structure makes the prediction task substantially easier because repeated profiles provide extremely consistent relationships between the predictor variables and Quality of Sleep.
+
+### Leakage Assessment
+
+No direct target leakage was detected.
+
+`Quality of Sleep` was confirmed to be absent from both `X_train` and `X_test`.
+
+Therefore, the model is not directly using the target variable as an input.
+
+However, the profile analysis revealed an important evaluation issue.
+
+The presence of exact predictor profiles in both training and testing data means that the model is frequently being evaluated on combinations of predictors that it has effectively already encountered during training.
+
+This is better described as **train-test profile overlap** or **non-independent observations** rather than direct target leakage.
+
+The overlap may cause the random train-test evaluation to overestimate the model's ability to generalize to genuinely new participant profiles.
+
+### Feature Ablation Results
+
+Random Forest performance was evaluated after removing selected predictors.
+
+| Feature Set | Number of Features | Mean CV R² | Std CV R² | Change vs All Features |
+|---|---:|---:|---:|---:|
+| All Features | 27 | 0.9796 | 0.0135 | 0.0000 |
+| Without Sleep Disorder | 24 | 0.9784 | 0.0150 | -0.0012 |
+| Without Sleep Duration | 26 | 0.9757 | 0.0150 | -0.0040 |
+| Without Stress Level | 26 | 0.9728 | 0.0177 | -0.0068 |
+| Without Sleep Duration + Stress Level + Sleep Disorder | 22 | 0.9116 | 0.0857 | -0.0680 |
+| Without Sleep Duration + Stress Level | 25 | 0.9097 | 0.0877 | -0.0699 |
+
+### Ablation Interpretation
+
+Removing Sleep Disorder had almost no effect on predictive performance.
+
+Mean cross-validation R² decreased from **0.9796** to **0.9784**, a change of only **-0.0012**.
+
+This suggests that Sleep Disorder contributes very little additional predictive information once the other features are available.
+
+Removing Sleep Duration alone reduced R² only slightly, from **0.9796** to **0.9757**.
+
+Removing Stress Level alone also caused only a small decrease, producing an R² of **0.9728**.
+
+These relatively small individual reductions indicate that the model can compensate for the loss of one highly informative feature by relying on correlated or redundant information from other variables.
+
+However, removing both Sleep Duration and Stress Level caused a much larger decrease:
+
+- With all features: **R² = 0.9796**
+- Without Sleep Duration and Stress Level: **R² = 0.9097**
+
+This corresponds to a decrease of approximately **0.0699 R²**.
+
+Removing Sleep Disorder in addition to those two features produced an R² of **0.9116**, which was nearly identical.
+
+This further confirms that Sleep Disorder is not a major source of the model's predictive performance.
+
+### Redundant Predictive Information
+
+The ablation results suggest that Sleep Duration and Stress Level contain overlapping predictive information.
+
+Removing either variable individually has only a modest effect because the remaining variables can partially compensate.
+
+Removing both simultaneously causes a substantially larger performance decline.
+
+This is consistent with the strong relationship previously observed between Sleep Duration and Stress Level.
+
+It also explains why feature importance should not be interpreted in isolation when predictors are correlated.
+
+### Feature Availability
+
+Another important issue is whether every predictor would actually be available at the intended time of prediction.
+
+Sleep Duration is a valid predictor if the model is intended to estimate sleep quality using information collected after a participant sleeps.
+
+However, if the intended goal were to predict the upcoming night's sleep quality before the participant goes to sleep, the same night's Sleep Duration would not yet be available.
+
+Similarly, Sleep Disorder may represent clinical information that would not necessarily be available in every deployment setting.
+
+Therefore, the final feature set should depend on a clearly defined prediction scenario.
+
+### Preprocessing Consideration
+
+The current feature-engineering workflow performed categorical encoding before the train-test split.
+
+Because one-hot encoding does not use the target variable, this represents much less risk than target-based preprocessing.
+
+However, best machine-learning practice is to learn preprocessing transformations from the training data only.
+
+A later stage of the project should therefore rebuild preprocessing and model training using a scikit-learn `Pipeline` or `ColumnTransformer`.
+
+This will ensure that the complete machine-learning workflow follows a stricter train-only preprocessing design.
+
+### Visualizations
+
+Three new visualizations were created:
+
+- `figures/random_forest_feature_importance.png`
+- `figures/random_forest_permutation_importance.png`
+- `figures/random_forest_ablation_analysis.png`
+
+The feature-importance plots show that Sleep Duration is the dominant predictor under both importance methods.
+
+The ablation plot shows that model performance remains extremely strong when individual features are removed but decreases more noticeably when both Sleep Duration and Stress Level are removed together.
+
+### Saved Results
+
+The following Day 8 reports were created:
+
+- `reports/random_forest_feature_importance.csv`
+- `reports/random_forest_permutation_importance.csv`
+- `reports/feature_target_correlations.csv`
+- `reports/data_leakage_profile_checks.csv`
+- `reports/random_forest_ablation_results.csv`
+
+These reports preserve the interpretation, profile-overlap, correlation, and feature-ablation results for future analysis.
+
+### Key Findings
+
+- Sleep Duration was the dominant Random Forest predictor.
+- Sleep Duration had an impurity-based importance of **0.7941**.
+- Sleep Duration had a permutation importance of **1.1514**.
+- Stress Level was the second-most important predictor.
+- Feature-importance results broadly agreed with the relationships found during exploratory data analysis.
+- No direct inclusion of the target variable was detected.
+- The dataset contains substantial repetition in predictor profiles.
+- Only **132 unique predictor profiles** exist across **374 observations**.
+- **320 of 374 observations (85.56%)** belong to repeated predictor profiles.
+- **65 of 75 test rows (86.67%)** had an exact predictor profile already present in the training data.
+- **44 unique feature profiles** appeared in both the training and test sets.
+- No identical predictor profile was associated with multiple Quality of Sleep values.
+- Removing Sleep Disorder had almost no effect on model performance.
+- Removing either Sleep Duration or Stress Level individually caused only a small decline.
+- Removing both Sleep Duration and Stress Level reduced mean CV R² from **0.9796** to approximately **0.9097**.
+- The high baseline and test scores are therefore likely influenced by both strong feature-target relationships and substantial repetition within the dataset.
+
+### Interpretation
+
+Day 8 significantly changed the interpretation of the earlier model results.
+
+The Random Forest remains highly accurate under the existing random-split evaluation, but its R² of approximately 0.99 should not be interpreted as evidence that the model would achieve the same accuracy on completely new participant profiles.
+
+The dataset contains extensive repetition, and most held-out test observations have predictor profiles that are already represented in the training set.
+
+This means that the current test set is not fully independent at the profile level.
+
+The model also relies heavily on Sleep Duration and Stress Level, although correlated predictors provide enough redundant information that removing either one individually has only a small effect.
+
+Therefore, the next stage should focus on obtaining a more conservative estimate of generalization rather than attempting to increase model accuracy further.
+
+### Limitations
+
+- The dataset contains only 374 observations.
+- Only 132 unique predictor profiles are present.
+- Approximately 85.56% of all rows belong to repeated predictor profiles.
+- Approximately 86.67% of test rows have an exact profile already represented in training.
+- Random train-test splitting does not guarantee independence between repeated profiles.
+- Feature importance measures model dependence rather than causation.
+- Impurity-based Random Forest importance can be affected by correlated predictors.
+- Permutation importance was calculated on a relatively small test set of 75 observations.
+- Predictor availability depends on the intended real-world prediction scenario.
+- The current preprocessing workflow was not implemented as a train-only pipeline.
+- Performance on this dataset should not automatically be generalized to external populations.
+
+### Validation
+
+The Day 8 notebook was tested from a fresh kernel.
+
+- Kernel restarted successfully.
+- The complete notebook executed from top to bottom.
+- All cells ran without errors.
+- Random Forest performance was reproduced successfully.
+- Feature importance was generated successfully.
+- Permutation importance was generated successfully.
+- Profile-overlap diagnostics were generated successfully.
+- Feature-ablation experiments completed successfully.
+- All expected reports were saved.
+- All expected figures were saved.
+- The final notebook output reported:
+
+`Day 8 analysis completed successfully.`
+
+### Reflection
+
+Today I learned that unusually strong model performance should be investigated rather than automatically treated as a successful final result.
+
+I learned the distinction between direct target leakage and train-test profile overlap.
+
+The target itself was not present in the predictor matrix, so no obvious direct target leakage was found. However, the discovery that 86.67% of test rows shared an exact predictor profile with training data revealed that the existing test set is much less independent than initially assumed.
+
+I also learned that feature importance and correlation answer different questions. Sleep Duration was overwhelmingly dominant in the Random Forest even though Stress Level had a slightly stronger absolute linear correlation with Quality of Sleep.
+
+Feature ablation also demonstrated how correlated variables can compensate for one another. Removing either Sleep Duration or Stress Level individually caused relatively little performance loss, while removing both caused a much larger decline.
+
+This analysis showed that understanding the structure of the data and the evaluation design is just as important as obtaining a high accuracy score.
+
+### Questions Raised
+
+- How much will performance decrease when identical predictor profiles are prevented from appearing across training and validation data?
+- What is the best way to create a group-aware validation strategy for repeated profiles?
+- How much of the original R² is explained by train-test profile overlap?
+- Can Random Forest still generalize well to genuinely unseen predictor combinations?
+- Should the project define a prediction scenario that excludes same-night Sleep Duration?
+- Should Sleep Disorder remain in the final feature set given its very small additional contribution?
+- How should preprocessing be rebuilt using a train-only Pipeline or ColumnTransformer?
+- Will simpler models remain competitive under a stricter validation strategy?
+- Is hyperparameter tuning still useful after correcting the evaluation methodology?
+
+### Next Steps
+
+- Create a group identifier for identical predictor profiles.
+- Use a group-aware train-validation strategy so identical profiles cannot appear in both training and validation data.
+- Re-evaluate Random Forest under this stricter validation design.
+- Compare group-aware performance with the original random-split performance.
+- Quantify how much the original evaluation was affected by repeated profile overlap.
+- Define the intended prediction timing and determine which features would realistically be available.
+- Rebuild preprocessing using a train-only scikit-learn Pipeline or ColumnTransformer.
+- Compare Random Forest with simpler models under the stricter evaluation strategy.
+- Delay hyperparameter tuning until the generalization methodology has been strengthened.

@@ -1,0 +1,28 @@
+Feature,Correlation with Quality of Sleep
+Stress Level,-0.8945982330249448
+Sleep Duration,0.8841580009417004
+Heart Rate,-0.6407844870161257
+Age,0.4523312822922805
+Occupation_Engineer,0.39794988573266366
+Sleep Disorder_Insomnia,-0.331866296501639
+Sleep Disorder_nan,0.327017591216981
+BMI Category_Normal,0.3264274038325182
+Occupation_Salesperson,-0.32552957778310765
+BMI Category_Overweight,-0.3162014419870797
+Occupation_Doctor,-0.2544399830148657
+Gender_Female,0.2501139486147905
+Gender_Male,-0.25011394861479047
+Occupation_Scientist,-0.2330758289093609
+Occupation_Lawyer,0.1729161039049111
+Occupation_Sales Representative,-0.16498660449117628
+Physical Activity Level,0.16119180282150045
+Occupation_Accountant,0.1587484249082341
+Occupation_Teacher,-0.12837152578145458
+Diastolic BP,-0.12615368848381908
+Systolic BP,-0.12535828553312567
+Sleep Disorder_Sleep Apnea,-0.06705358630533549
+Daily Steps,-0.046960307232763336
+BMI Category_Obese,-0.044159805195733044
+Occupation_Software Engineer,0.04414171577750245
+Occupation_Manager,-0.017876282196360078
+Occupation_Nurse,-0.0016682601990667429
