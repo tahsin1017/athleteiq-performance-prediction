@@ -965,3 +965,113 @@ This analysis showed that understanding the structure of the data and the evalua
 - Rebuild preprocessing using a train-only scikit-learn Pipeline or ColumnTransformer.
 - Compare Random Forest with simpler models under the stricter evaluation strategy.
 - Delay hyperparameter tuning until the generalization methodology has been strengthened.
+
+
+## Day 9 — Group-Aware Validation and Unseen-Profile Generalization
+
+### Objective
+
+Evaluate AthleteIQ under a stricter validation design in which identical predictor profiles cannot appear in both training and evaluation data.
+
+Day 8 showed that the original random train/test split contained substantial profile overlap, with 65 of 75 test observations having an exact predictor profile already represented in training.
+
+### Work Completed
+
+- Reconstructed the complete encoded dataset containing 374 observations.
+- Confirmed 132 unique predictor profiles.
+- Assigned identical predictor combinations to the same profile group.
+- Verified that no profile group was associated with multiple Quality of Sleep target values.
+- Compared ordinary 5-fold random cross-validation with 5-fold GroupKFold validation.
+- Verified zero predictor-profile overlap in every group-aware validation fold.
+- Created a profile-separated holdout split using GroupShuffleSplit.
+- Evaluated Dummy Regressor, Linear Regression, Ridge Regression, and Random Forest.
+- Repeated profile-separated Random Forest evaluation across 20 different holdout splits.
+
+### Key Results
+
+Random Forest under ordinary random 5-fold cross-validation:
+
+- MAE: 0.0432
+- RMSE: 0.1478
+- R²: 0.9820
+
+Random Forest under group-aware 5-fold cross-validation:
+
+- MAE: 0.0688
+- RMSE: 0.2176
+- R²: 0.9628
+- R² change relative to random CV: -0.0193
+
+Profile-separated Random Forest holdout:
+
+- Training rows: 316
+- Test rows: 58
+- Training profiles: 105
+- Test profiles: 27
+- Exact profile overlap: 0
+- MAE: 0.2030
+- RMSE: 0.4204
+- R²: 0.9165
+
+Across 20 repeated profile-separated holdouts:
+
+- Mean MAE: 0.0892
+- Mean RMSE: 0.2383
+- Mean R²: 0.9519
+- R² standard deviation: 0.0343
+- Minimum R²: 0.8798
+- Maximum R²: 0.9918
+
+### Model Comparison Under Stricter Evaluation
+
+Under the profile-separated holdout, Linear Regression and Ridge Regression slightly outperformed Random Forest:
+
+- Linear Regression R²: 0.9286
+- Ridge Regression R²: 0.9282
+- Random Forest R²: 0.9165
+
+This shows that model ranking can change when evaluation is performed on genuinely unseen predictor profiles.
+
+### Interpretation
+
+Group-aware validation produced lower performance than ordinary random validation, confirming that repeated predictor profiles had made the original evaluation somewhat optimistic.
+
+However, the Random Forest still achieved strong average performance under stricter evaluation, with a mean R² of 0.9519 across 20 profile-separated holdouts.
+
+The range in R² values, from 0.8798 to 0.9918, shows that model performance depends on which unseen profiles are selected for testing.
+
+The findings should therefore be interpreted as evidence of train-test profile overlap and non-independent observations under random splitting, rather than direct target leakage.
+
+### Limitations
+
+- Group-aware validation removes exact profile overlap but does not establish external real-world or clinical generalization.
+- Repeated observations within the same profile remain together inside training folds and can give some profiles greater weight.
+- The encoded feature representation was created before the original split, so preprocessing is not yet fully isolated inside each training fold.
+- The dataset remains small, with only 132 unique predictor profiles.
+- High predictive performance should not be interpreted as evidence of clinical readiness.
+
+### Files Generated
+
+Reports:
+
+- `group_cv_fold_diagnostics.csv`
+- `random_vs_group_cv_results.csv`
+- `random_vs_group_cv_r2_comparison.csv`
+- `group_holdout_model_results.csv`
+- `random_forest_holdout_comparison.csv`
+- `group_holdout_split_diagnostics.csv`
+- `random_forest_repeated_group_holdout.csv`
+- `random_forest_repeated_group_summary.csv`
+
+Figures:
+
+- `random_vs_group_cv_r2.png`
+- `group_holdout_rf_actual_vs_predicted.png`
+- `random_forest_group_holdout_r2_distribution.png`
+
+### Next Steps
+
+- Rebuild preprocessing using a train-only scikit-learn Pipeline and ColumnTransformer.
+- Ensure imputation, categorical encoding, and all learned preprocessing occur only inside training folds.
+- Re-evaluate baseline models under the stricter validation framework.
+- Compare model performance after removing preprocessing leakage risk.
