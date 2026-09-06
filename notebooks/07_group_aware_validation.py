@@ -1,27 +1,23 @@
 # %%
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-
 from sklearn.base import clone
 from sklearn.dummy import DummyRegressor
-from sklearn.linear_model import LinearRegression, Ridge
 from sklearn.ensemble import RandomForestRegressor
-
-from sklearn.model_selection import (
-    KFold,
-    GroupKFold,
-    GroupShuffleSplit,
-)
-
+from sklearn.linear_model import LinearRegression, Ridge
 from sklearn.metrics import (
     mean_absolute_error,
     mean_squared_error,
     r2_score,
 )
-
+from sklearn.model_selection import (
+    GroupKFold,
+    GroupShuffleSplit,
+    KFold,
+)
 
 PROJECT_ROOT = Path(
     "/Users/home/Desktop/AthleteIQ/athleteiq-performance-prediction"
@@ -790,10 +786,18 @@ plt.hist(
     bins=10,
 )
 
+r2_values = repeated_group_results_df["R2"].to_numpy(
+    dtype=float
+)
+mean_r2 = float(
+    np.mean(r2_values)
+)
+
 plt.axvline(
-    repeated_group_results_df["R2"].mean(),
+    mean_r2,
     linestyle="--",
     label="Mean profile-separated R²",
+
 )
 
 plt.axvline(

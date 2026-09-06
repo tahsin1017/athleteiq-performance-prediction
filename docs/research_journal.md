@@ -1075,3 +1075,102 @@ Figures:
 - Ensure imputation, categorical encoding, and all learned preprocessing occur only inside training folds.
 - Re-evaluate baseline models under the stricter validation framework.
 - Compare model performance after removing preprocessing leakage risk.
+
+
+
+
+## Day 10 — Train-Only Preprocessing Pipeline
+### Objective
+Rebuild the AthleteIQ preprocessing workflow using a scikit-learn Pipeline and ColumnTransformer so that learned preprocessing is fit only on training data within each validation fold.
+### Motivation
+Earlier stages encoded categorical variables before cross-validation.
+Although one-hot encoding does not use the target variable directly, fitting preprocessing globally is methodologically less rigorous because information about the complete set of categories is available before validation.
+Day 10 therefore tested whether a strict train-only preprocessing design changes group-aware model performance.
+### Work Completed
+- Loaded the processed dataset before one-hot encoding.
+- Separated the target variable from the 12 raw predictor columns.
+- Reconstructed exact predictor-profile groups.
+- Confirmed 132 unique predictor profiles.
+- Identified 8 numerical features and 4 categorical features.
+- Built a ColumnTransformer.
+- Passed numerical variables through unchanged.
+- Applied OneHotEncoder with `handle_unknown="ignore"` to categorical variables.
+- Wrapped preprocessing and each regression model inside a scikit-learn Pipeline.
+- Evaluated Dummy Regressor, Linear Regression, Ridge Regression, and Random Forest using 5-fold GroupKFold validation.
+- Verified zero exact predictor-profile overlap across all validation folds.
+- Constructed a globally encoded comparison dataset.
+- Evaluated globally encoded models using the exact same group-aware folds.
+- Compared global preprocessing with strict train-only preprocessing.
+### Dataset
+- Rows: 374
+- Raw predictor columns: 12
+- Numerical features: 8
+- Categorical features: 4
+- Unique predictor profiles: 132
+- Missing predictor values: 219
+### Group-Aware Validation
+GroupKFold used 5 folds.
+Maximum exact predictor-profile overlap between training and validation data:
+- **0 profiles**
+This confirms that identical predictor profiles never appeared in both the training and validation portion of the same fold.
+### Train-Only Pipeline Results
+| Model | Mean MAE | Mean RMSE | Mean R² | Std R² |
+|---|---:|---:|---:|---:|
+| Random Forest | 0.0677 | 0.2080 | 0.9612 | 0.0314 |
+| Ridge Regression | 0.1731 | 0.2856 | 0.9325 | 0.0300 |
+| Linear Regression | 0.1753 | 0.3061 | 0.9214 | 0.0368 |
+| Dummy Regressor | 1.0673 | 1.2210 | -0.1565 | 0.0946 |
+Random Forest remained the strongest model under the strict train-only preprocessing design.
+### Global vs Train-Only Preprocessing
+Using the exact same GroupKFold splits:
+Random Forest with globally fitted one-hot encoding:
+- Mean R²: 0.9618
+Random Forest with train-only pipeline preprocessing:
+- Mean R²: 0.9612
+Difference:
+- R² change: -0.000599
+- MAE change: +0.000778
+Linear Regression, Ridge Regression, and Dummy Regression showed effectively no measurable difference between global one-hot encoding and train-only pipeline preprocessing on the same folds.
+### Interpretation
+The previous preprocessing workflow was methodologically less rigorous because categorical encoding was fit before validation.
+However, the fair same-fold comparison showed that global one-hot encoding did not materially inflate group-aware validation performance in this dataset.
+For Random Forest, the difference in mean R² was only -0.000599.
+The small difference indicates that the strong model performance observed in Day 9 was not primarily caused by globally fitting the one-hot encoder.
+The more important methodological issue remains the repeated predictor-profile structure identified during Days 8 and 9.
+### Why the Pipeline Is Better
+Even though the numerical performance changed very little, the pipeline design is preferable because:
+- preprocessing is fit only on training data,
+- validation data remains isolated,
+- unseen categories can be handled safely using `handle_unknown="ignore"`,
+- preprocessing and modeling are bundled into one reproducible workflow,
+- future scaling, imputation, or feature transformations can be added without leaking validation information,
+- the evaluation design is easier to reproduce and extend.
+### Limitations
+- The dataset remains small, with only 132 unique predictor profiles.
+- Group-aware validation prevents exact predictor-profile overlap but does not establish external generalization.
+- Missing Sleep Disorder values remain present in the raw dataset and are handled by OneHotEncoder as a categorical level.
+- Repeated observations within the same predictor profile can still give some profiles greater influence during training.
+- No external independent dataset was available for validation.
+- High predictive performance should not be interpreted as clinical readiness.
+### Files Generated
+Reports:
+- `pipeline_group_cv_fold_results.csv`
+- `pipeline_group_cv_summary.csv`
+- `global_vs_pipeline_preprocessing_comparison.csv`
+- `pipeline_group_cv_fold_diagnostics.csv`
+Figure:
+- `global_vs_pipeline_group_cv_r2.png`
+### Key Conclusion
+A strict train-only preprocessing pipeline was successfully implemented.
+The new pipeline improved methodological rigor but produced almost the same group-aware model performance as global one-hot encoding.
+For Random Forest:
+- Global preprocessing R²: 0.9618
+- Train-only pipeline R²: 0.9612
+- Difference: -0.000599
+This indicates that global one-hot encoding was not a major source of optimistic performance in this experiment.
+### Next Steps
+- Define a realistic prediction-time feature scenario.
+- Evaluate whether same-night Sleep Duration should remain available as a predictor.
+- Compare full-feature and deployment-realistic feature sets.
+- Consider repeated group-aware validation for the pipeline-based workflow.
+- Delay hyperparameter tuning until the final prediction scenario and feature set are defined.
