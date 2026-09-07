@@ -1,0 +1,11 @@
+Scenario,Fold,Train Rows,Validation Rows,Train Profiles,Validation Profiles,Profile Overlap
+Full,1,299,75,106,26,0
+Full,2,299,75,106,26,0
+Full,3,299,75,105,27,0
+Full,4,299,75,105,27,0
+Full,5,300,74,106,26,0
+Pre-sleep,1,299,75,79,20,0
+Pre-sleep,2,299,75,79,20,0
+Pre-sleep,3,299,75,79,20,0
+Pre-sleep,4,299,75,79,20,0
+Pre-sleep,5,300,74,80,19,0
