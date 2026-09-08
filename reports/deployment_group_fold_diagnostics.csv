@@ -1,0 +1,6 @@
+Fold,Train Rows,Validation Rows,Train Deployment Profiles,Validation Deployment Profiles,Profile Overlap
+1,299,75,62,15,0
+2,299,75,61,16,0
+3,299,75,61,16,0
+4,299,75,62,15,0
+5,300,74,62,15,0

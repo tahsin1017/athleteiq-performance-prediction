@@ -2053,3 +2053,254 @@ Compare the pre-sleep feature set with the stricter deployment feature set.
 Use repeated group-aware evaluation to quantify stability.
 
 Continue delaying hyperparameter tuning until the final feature-availability scenario is defined.
+
+
+---
+
+## Day 12 — Deployment-Oriented Feature Set and Stability Analysis
+
+### Objective
+
+Evaluate AthleteIQ using a stricter deployment-oriented feature set and determine how stable model performance remains across repeated unseen-profile train/test splits.
+
+### Research Question
+
+How much predictive performance remains when AthleteIQ uses only features that could realistically be available before sleep, and how stable is that performance across different unseen predictor profiles?
+
+### Motivation
+
+Day 11 removed same-night `Sleep Duration` to create a more realistic pre-sleep prediction scenario.
+
+However, several remaining variables may also be unavailable or impractical in a real deployment setting.
+
+Day 12 therefore created a stricter deployment-oriented feature set by excluding:
+
+- `Sleep Duration`
+- `Sleep Disorder`
+- `Systolic BP`
+- `Diastolic BP`
+
+### Feature Scenarios
+
+Three feature scenarios were compared:
+
+1. **Full**
+   - 12 predictors
+
+2. **Pre-sleep**
+   - 11 predictors
+   - Excludes `Sleep Duration`
+
+3. **Deployment**
+   - 8 predictors
+   - Excludes `Sleep Duration`
+   - Excludes `Sleep Disorder`
+   - Excludes `Systolic BP`
+   - Excludes `Diastolic BP`
+
+The deployment feature set contains:
+
+- Gender
+- Age
+- Occupation
+- Physical Activity Level
+- Stress Level
+- BMI Category
+- Heart Rate
+- Daily Steps
+
+### Predictor-Profile Structure
+
+- Full-feature unique profiles: 132
+- Pre-sleep unique profiles: 99
+- Deployment unique profiles: 77
+- Profiles lost from Full to Pre-sleep: 33
+- Profiles lost from Pre-sleep to Deployment: 22
+- Deployment profiles with multiple target values: 0
+
+Removing additional predictors reduced the number of exact predictor profiles from 99 in the pre-sleep scenario to only 77 in the deployment scenario.
+
+No identical deployment predictor profile was associated with multiple `Quality of Sleep` values.
+
+### Shared Group-Aware Validation
+
+A 5-fold `GroupKFold` design was used for the direct comparison among Full, Pre-sleep, and Deployment scenarios.
+
+All three scenarios were evaluated using the **same folds**, defined by the strictest deployment-profile groups.
+
+Maximum deployment-profile overlap between training and validation folds:
+
+- **0 profiles**
+
+This ensures that identical deployment profiles never appear in both training and validation within the same fold.
+
+All categorical preprocessing was performed inside scikit-learn `Pipeline` objects so one-hot encoding was fit only on each training fold.
+
+### Same-Fold Performance
+
+| Scenario | Model | Mean MAE | Mean RMSE | Mean R² | Std R² |
+|---|---|---:|---:|---:|---:|
+| Full | Random Forest | 0.0951 | 0.2723 | 0.9393 | 0.0197 |
+| Full | Ridge | 0.2077 | 0.3207 | 0.9065 | 0.0428 |
+| Full | Linear | 0.2123 | 0.3422 | 0.8959 | 0.0428 |
+| Pre-sleep | Random Forest | 0.1155 | 0.3206 | 0.9125 | 0.0260 |
+| Pre-sleep | Ridge | 0.2118 | 0.3221 | 0.9032 | 0.0516 |
+| Pre-sleep | Linear | 0.2211 | 0.3425 | 0.8926 | 0.0531 |
+| Deployment | Ridge | 0.1982 | 0.3124 | 0.9153 | 0.0216 |
+| Deployment | Random Forest | 0.1125 | 0.3148 | 0.9148 | 0.0284 |
+| Deployment | Linear | 0.2032 | 0.3274 | 0.9082 | 0.0185 |
+
+### Feature-Scenario Findings
+
+Under deployment-defined shared folds:
+
+Random Forest changed from:
+
+- Full R²: **0.9393**
+- Pre-sleep R²: **0.9125**
+- Deployment R²: **0.9148**
+
+The deployment Random Forest therefore remained highly predictive even after removing `Sleep Duration`, `Sleep Disorder`, and blood-pressure variables.
+
+Ridge changed from:
+
+- Full R²: **0.9065**
+- Pre-sleep R²: **0.9032**
+- Deployment R²: **0.9153**
+
+Linear Regression also improved slightly under the deployment feature set.
+
+These improvements should not be interpreted as the removed variables containing harmful information in a general sense. Instead, under these particular group-separated folds, the smaller feature set may reduce redundancy or noise for the linear models.
+
+The Day 12 Full and Pre-sleep scores also should not be directly substituted for the Day 11 estimates because Day 12 uses the stricter deployment-profile grouping to define the shared folds.
+
+### Repeated Group-Separated Stability Evaluation
+
+To evaluate stability beyond a single 5-fold partition, `GroupShuffleSplit` was used to create 20 repeated deployment-profile-separated train/test splits.
+
+Each split placed entire deployment profiles into either training or testing.
+
+Maximum exact deployment-profile overlap across the repeated holdouts:
+
+- **0 profiles**
+
+A total of 80 model evaluations were produced:
+
+- 20 splits
+- 4 models per split
+
+### Repeated Holdout Results
+
+| Model | Mean MAE | Mean RMSE | Mean R² | Std R² | Min R² | Max R² |
+|---|---:|---:|---:|---:|---:|---:|
+| Ridge | 0.2048 | 0.3230 | 0.9043 | 0.0563 | 0.7505 | 0.9742 |
+| Linear | 0.2105 | 0.3408 | 0.8917 | 0.0716 | 0.6868 | 0.9709 |
+| Random Forest | 0.1337 | 0.3550 | 0.8872 | 0.0819 | 0.7092 | 0.9882 |
+| Dummy | 1.0493 | 1.2170 | -0.1942 | 0.2019 | -0.6074 | -0.0000 |
+
+### Model Wins Across 20 Splits
+
+- Ridge: **9 wins**
+- Random Forest: **9 wins**
+- Linear Regression: **2 wins**
+
+Ridge and Random Forest therefore won the same number of individual splits.
+
+However, Ridge achieved the highest mean R² and the lowest R² standard deviation among the predictive models.
+
+### Interpretation
+
+Day 12 changes the model-selection picture.
+
+Random Forest was the strongest model in the earlier full-feature analyses, but Ridge becomes the strongest stability-oriented candidate when evaluation focuses on a stricter deployment feature set and repeated unseen deployment profiles.
+
+Ridge achieved:
+
+- Mean repeated-holdout R²: **0.9043**
+- R² standard deviation: **0.0563**
+- Minimum R²: **0.7505**
+- Maximum R²: **0.9742**
+
+Random Forest achieved:
+
+- Mean repeated-holdout R²: **0.8872**
+- R² standard deviation: **0.0819**
+- Minimum R²: **0.7092**
+- Maximum R²: **0.9882**
+
+Random Forest occasionally achieved extremely strong performance, but its results varied more substantially depending on which unseen profiles were selected for testing.
+
+Ridge therefore provides the strongest combination of average performance and stability under the current deployment-oriented evaluation.
+
+Linear Regression also remained strong, suggesting that much of the predictive structure available in the reduced feature set can be captured with relatively simple linear relationships.
+
+### Scientific Interpretation
+
+The results reinforce that the model with the highest score under one evaluation design is not automatically the best final model.
+
+Model choice depends on:
+
+- realistic feature availability,
+- independence between training and evaluation data,
+- average predictive performance,
+- variability across different splits,
+- model complexity,
+- and the intended deployment setting.
+
+For AthleteIQ, Ridge currently offers an attractive balance of predictive performance, stability, and simplicity under the deployment-oriented scenario.
+
+### Limitations
+
+- The dataset contains only 374 observations.
+- The deployment feature set produces only 77 unique predictor profiles.
+- Exact-profile grouping prevents identical profiles from crossing train/test boundaries but does not establish unseen-person or external-population generalization.
+- Repeated rows within profiles can still influence model fitting.
+- The dataset is observational.
+- Several variables may be self-reported.
+- Stress Level may itself be measured contemporaneously depending on the intended application.
+- The dataset may not represent athletic populations specifically.
+- No independent external dataset was available.
+- Strong performance does not establish causal relationships or clinical readiness.
+- Twenty repeated holdouts provide a more informative stability estimate than one split, but uncertainty remains because the dataset is small.
+
+### Files Generated
+
+Reports:
+
+- `reports/deployment_group_fold_diagnostics.csv`
+- `reports/deployment_same_fold_results.csv`
+- `reports/deployment_same_fold_summary.csv`
+- `reports/deployment_scenario_comparison.csv`
+- `reports/deployment_repeated_group_holdout_results.csv`
+- `reports/deployment_repeated_group_holdout_summary.csv`
+- `reports/deployment_repeated_group_holdout_winners.csv`
+
+Figures:
+
+- `figures/deployment_feature_scenario_group_cv_r2.png`
+- `figures/deployment_repeated_group_holdout_r2.png`
+
+Notebook/script:
+
+- `notebooks/10_deployment_feature_stability.py`
+
+### Key Conclusion
+
+The deployment-oriented feature set retained strong predictive performance despite removing four potentially unavailable predictors.
+
+Across 20 repeated deployment-profile-separated holdouts, Ridge achieved the strongest average and most stable performance.
+
+The current leading deployment-oriented model is therefore:
+
+**Ridge Regression**
+
+This selection is based on stability and realistic feature availability rather than simply maximizing the highest observed R².
+
+### Next Steps
+
+- Perform final model-selection analysis using the deployment feature set.
+- Examine Ridge coefficients and their stability to understand which deployment features contribute most strongly.
+- Compare Ridge interpretation with the earlier Random Forest feature-importance findings.
+- Consider whether `Stress Level`, `Heart Rate`, and other remaining predictors are truly available at the intended prediction time.
+- Establish a final feature specification before hyperparameter tuning.
+- Only then consider modest hyperparameter tuning and final model packaging.
