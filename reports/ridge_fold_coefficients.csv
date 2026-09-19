@@ -1,0 +1,89 @@
+Fold,Feature,Coefficient
+1,numeric__Age,0.4855239515650037
+1,numeric__Physical Activity Level,0.10040903913585378
+1,numeric__Stress Level,-0.783155630870504
+1,numeric__Heart Rate,-0.08699796789250103
+1,numeric__Daily Steps,-0.00016529560681450054
+1,categorical__Gender_Male,0.3048052770897843
+1,categorical__Occupation_Doctor,-0.06636798811765637
+1,categorical__Occupation_Engineer,-0.28009393958207957
+1,categorical__Occupation_Lawyer,0.05823385837024003
+1,categorical__Occupation_Manager,-0.0696457148682922
+1,categorical__Occupation_Nurse,-0.09295831584710446
+1,categorical__Occupation_Sales Representative,-0.6104663538810078
+1,categorical__Occupation_Salesperson,-0.44235962545758767
+1,categorical__Occupation_Scientist,-0.6033483958171815
+1,categorical__Occupation_Software Engineer,-0.04196926352663709
+1,categorical__Occupation_Teacher,-0.47123508710798645
+1,categorical__BMI Category_Obese,-0.5633945686220236
+1,categorical__BMI Category_Overweight,-0.6966512639653484
+2,numeric__Age,0.4892347663488332
+2,numeric__Physical Activity Level,0.0691127323153806
+2,numeric__Stress Level,-0.805199049069936
+2,numeric__Heart Rate,-0.15847915611055896
+2,numeric__Daily Steps,0.038564375640464874
+2,categorical__Gender_Male,0.30831405014531754
+2,categorical__Occupation_Doctor,-0.09524777751079876
+2,categorical__Occupation_Engineer,-0.26664531139850056
+2,categorical__Occupation_Lawyer,-0.055188309711291454
+2,categorical__Occupation_Manager,-0.07488397724647096
+2,categorical__Occupation_Nurse,-0.23577737603363746
+2,categorical__Occupation_Sales Representative,-0.603665273382873
+2,categorical__Occupation_Salesperson,-0.5251042674990372
+2,categorical__Occupation_Scientist,-0.37779780506405947
+2,categorical__Occupation_Software Engineer,-0.2710398232209285
+2,categorical__Occupation_Teacher,-0.47068427056087436
+2,categorical__BMI Category_Obese,-0.34847565802776936
+2,categorical__BMI Category_Overweight,-0.5489091010607341
+3,numeric__Age,0.48648746802451426
+3,numeric__Physical Activity Level,0.02781748077429524
+3,numeric__Stress Level,-0.8487691550787795
+3,numeric__Heart Rate,-0.06997737868187427
+3,numeric__Daily Steps,0.018849861331141873
+3,categorical__Gender_Male,0.4398587511812308
+3,categorical__Occupation_Doctor,-0.2095619486013215
+3,categorical__Occupation_Engineer,-0.403894720087463
+3,categorical__Occupation_Lawyer,-0.1725773751821147
+3,categorical__Occupation_Manager,-0.15239948559212055
+3,categorical__Occupation_Nurse,-0.17173423839575166
+3,categorical__Occupation_Sales Representative,-0.8311011305702767
+3,categorical__Occupation_Salesperson,-0.7358398659407955
+3,categorical__Occupation_Scientist,-0.10571697583555192
+3,categorical__Occupation_Software Engineer,-0.008641565353230867
+3,categorical__Occupation_Teacher,-0.6563643365359875
+3,categorical__BMI Category_Obese,-0.4756959406888972
+3,categorical__BMI Category_Overweight,-0.5663735969379992
+4,numeric__Age,0.41193299501461267
+4,numeric__Physical Activity Level,0.06069331561485495
+4,numeric__Stress Level,-0.8353153467443232
+4,numeric__Heart Rate,-0.12871195333621202
+4,numeric__Daily Steps,0.05171976699044021
+4,categorical__Gender_Male,0.43748575750753715
+4,categorical__Occupation_Doctor,-0.09117310162064286
+4,categorical__Occupation_Engineer,-0.3460601455396182
+4,categorical__Occupation_Lawyer,-0.15070543552870305
+4,categorical__Occupation_Manager,0.01655638528740207
+4,categorical__Occupation_Nurse,-0.007659573785789655
+4,categorical__Occupation_Salesperson,-0.416941012313367
+4,categorical__Occupation_Scientist,-0.16947577482770138
+4,categorical__Occupation_Software Engineer,-0.23630926601788538
+4,categorical__Occupation_Teacher,-0.4905099931204981
+4,categorical__BMI Category_Obese,-0.04594609399303818
+4,categorical__BMI Category_Overweight,-0.7361263755941385
+5,numeric__Age,0.5022516871964742
+5,numeric__Physical Activity Level,0.04716437129268554
+5,numeric__Stress Level,-0.8923806877068844
+5,numeric__Heart Rate,-0.050735694933901475
+5,numeric__Daily Steps,0.08300021825377588
+5,categorical__Gender_Male,0.28132279090440643
+5,categorical__Occupation_Doctor,-0.0014535542338128885
+5,categorical__Occupation_Engineer,-0.3820226405077022
+5,categorical__Occupation_Lawyer,-0.11070418902765435
+5,categorical__Occupation_Nurse,-0.3213359083503495
+5,categorical__Occupation_Sales Representative,-0.4670367574751285
+5,categorical__Occupation_Salesperson,-0.4936760826451403
+5,categorical__Occupation_Scientist,-0.41952561414686607
+5,categorical__Occupation_Software Engineer,-0.04188698325290819
+5,categorical__Occupation_Teacher,-0.5835044955746984
+5,categorical__BMI Category_Obese,-0.7105951885194774
+5,categorical__BMI Category_Overweight,-0.6442764677415689

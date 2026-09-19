@@ -2304,3 +2304,267 @@ This selection is based on stability and realistic feature availability rather t
 - Consider whether `Stress Level`, `Heart Rate`, and other remaining predictors are truly available at the intended prediction time.
 - Establish a final feature specification before hyperparameter tuning.
 - Only then consider modest hyperparameter tuning and final model packaging.
+
+
+---
+
+## Day 13 — Ridge Interpretation and Final Feature Specification
+
+### Objective
+
+Interpret the deployment-oriented Ridge Regression model and evaluate the stability of its coefficients across group-aware folds.
+
+### Motivation
+
+Day 12 identified Ridge Regression as the most stable deployment-oriented model under repeated group-separated holdout evaluation.
+
+Before moving to hyperparameter tuning or model packaging, Day 13 examined whether Ridge relies on stable and interpretable predictors.
+
+### Deployment Feature Set
+
+The deployment-oriented predictor set contains 8 original features:
+
+- Gender
+- Age
+- Occupation
+- Physical Activity Level
+- Stress Level
+- BMI Category
+- Heart Rate
+- Daily Steps
+
+The deployment feature set excludes:
+
+- Sleep Duration
+- Sleep Disorder
+- Systolic BP
+- Diastolic BP
+
+### Predictor-Profile Structure
+
+- Total rows: 374
+- Unique deployment profiles: 77
+- Maximum train-validation profile overlap: 0
+
+Five-fold `GroupKFold` validation was used so identical deployment predictor profiles could not appear in both training and validation data within the same fold.
+
+### Interpretable Ridge Pipeline
+
+The Ridge model was rebuilt using:
+
+- `StandardScaler` for numerical variables
+- `OneHotEncoder(handle_unknown="ignore", drop="first")` for categorical variables
+- `Ridge(alpha=1.0)` as the regression model
+
+Numerical standardization was added because raw numerical variables such as Age, Heart Rate, and Daily Steps are measured on different scales.
+
+Using `drop="first"` created an omitted reference category for each categorical variable, making categorical Ridge coefficients easier to interpret.
+
+Categorical coefficients therefore represent differences relative to their omitted reference categories.
+
+### Coefficient Stability Analysis
+
+A separate Ridge pipeline was fit in each of the five group-aware folds.
+
+The fitted transformed feature names and Ridge coefficients were extracted from every fold.
+
+After reference-category encoding:
+
+- Final transformed features: 18
+- Sign-stable transformed features: 15
+- Sign-unstable transformed features: 3
+
+### Strongest Stable Numeric Patterns
+
+#### Stress Level
+
+Mean fold coefficient:
+
+- **-0.8330**
+
+Final full-data coefficient:
+
+- **-0.8491**
+
+Stress Level had the strongest numeric coefficient and remained negative in every fold.
+
+Within this standardized Ridge model, higher Stress Level was therefore consistently associated with lower predicted Quality of Sleep, conditional on the other included predictors.
+
+This association should not be interpreted causally.
+
+#### Age
+
+Mean fold coefficient:
+
+- **+0.4751**
+
+Final full-data coefficient:
+
+- **+0.4886**
+
+Age remained positive across all folds and showed low coefficient variability.
+
+This makes Age one of the clearest stable positive numerical signals in the deployment model.
+
+#### Heart Rate
+
+Mean fold coefficient:
+
+- **-0.0990**
+
+Final full-data coefficient:
+
+- **-0.0823**
+
+Heart Rate remained negative across all folds, although its coefficient was considerably smaller than those of Stress Level and Age.
+
+#### Physical Activity Level
+
+Mean fold coefficient:
+
+- **+0.0610**
+
+Final full-data coefficient:
+
+- **+0.0539**
+
+Physical Activity Level remained positive across all folds, but its independent contribution was relatively small.
+
+#### Daily Steps
+
+Mean fold coefficient:
+
+- **+0.0384**
+
+Final full-data coefficient:
+
+- **+0.0398**
+
+Daily Steps had a very small coefficient and crossed zero across folds.
+
+It is therefore considered a weak and unstable independent Ridge contributor after controlling for the other deployment predictors.
+
+### Categorical Coefficient Interpretation
+
+Categorical variables were encoded using reference-category coding.
+
+Therefore, occupation, gender, and BMI coefficients represent contrasts relative to omitted reference categories rather than absolute effects.
+
+Several categorical contrasts were large and sign-stable.
+
+However, coefficient magnitude should not be compared mechanically across all transformed features because standardized numerical variables and binary categorical indicators are not represented on exactly the same scale.
+
+Some categorical levels were absent from individual training folds, causing their coefficient fold count to be smaller than five.
+
+### Unstable Transformed Features
+
+The transformed features whose coefficient signs changed across folds were:
+
+- `categorical__Occupation_Lawyer`
+- `categorical__Occupation_Manager`
+- `numeric__Daily Steps`
+
+These terms should be interpreted cautiously.
+
+A sign change does not automatically mean the original predictor should be removed, especially for categorical variables represented through multiple one-hot contrasts.
+
+### Final Full-Data Ridge Coefficients
+
+The final Ridge model was fit on the full deployment dataset after preprocessing.
+
+The strongest coefficient magnitudes included:
+
+- Stress Level: approximately **-0.849**
+- Sales Representative occupation contrast: approximately **-0.674**
+- Overweight BMI contrast: approximately **-0.643**
+- Salesperson occupation contrast: approximately **-0.575**
+- Teacher occupation contrast: approximately **-0.545**
+- Obese BMI contrast: approximately **-0.498**
+- Age: approximately **+0.489**
+- Male gender contrast: approximately **+0.387**
+
+These values describe model associations within this dataset and should not be interpreted as causal effects.
+
+### Interpretation
+
+Day 13 shows that the deployment-oriented Ridge model is not relying equally on every predictor.
+
+A relatively small group of stable signals drives much of the fitted linear structure.
+
+The clearest numerical signals are:
+
+- Stress Level
+- Age
+- Heart Rate
+- Physical Activity Level
+
+Daily Steps contributes little independent information under the current Ridge specification.
+
+The coefficient analysis also reinforces the need to interpret categorical effects carefully because each one-hot coefficient is defined relative to an omitted reference category.
+
+### Feature Specification Decision
+
+The current 8-feature deployment set will be retained for the next stage.
+
+Daily Steps is flagged as a weak and unstable contributor, but it will not yet be removed solely on the basis of one coefficient-stability analysis.
+
+Occupation will also remain because instability in a small number of occupation contrasts does not imply that the entire categorical feature is uninformative.
+
+The current final pre-tuning deployment feature specification is therefore:
+
+- Gender
+- Age
+- Occupation
+- Physical Activity Level
+- Stress Level
+- BMI Category
+- Heart Rate
+- Daily Steps
+
+### Limitations
+
+- The dataset contains only 374 observations.
+- Only 77 unique deployment predictor profiles are present.
+- Coefficient stability was evaluated across only five GroupKFold partitions.
+- Some categorical levels were absent from certain training folds.
+- Ridge coefficients describe conditional model associations, not causal effects.
+- Categorical coefficients depend on the choice of omitted reference category.
+- Numerical coefficients were standardized, while categorical indicators remained binary.
+- Exact-profile grouping does not establish external or unseen-person generalization.
+- No external validation dataset was available.
+- The dataset may not represent athletic populations specifically.
+
+### Files Generated
+
+Reports:
+
+- `reports/ridge_fold_coefficients.csv`
+- `reports/ridge_coefficient_stability_summary.csv`
+- `reports/ridge_final_coefficient_interpretation.csv`
+
+Figure:
+
+- `figures/ridge_coefficient_stability.png`
+
+Notebook/script:
+
+- `notebooks/11_ridge_interpretation_and_feature_specification.py`
+
+### Key Conclusion
+
+Ridge Regression remains a strong deployment-oriented candidate because its most important numerical coefficients are stable across profile-separated folds.
+
+Stress Level and Age are the clearest stable numerical signals.
+
+Daily Steps appears weak and unstable, while a small number of occupation contrasts also change sign.
+
+The current 8-feature deployment specification will therefore be retained until the next model-selection step rather than being aggressively reduced based on coefficient magnitude alone.
+
+### Next Steps
+
+- Compare the current 8-feature Ridge model with a reduced specification that removes weak or questionable predictors.
+- Test whether removing Daily Steps materially changes repeated group-aware performance.
+- Reassess whether Stress Level and Heart Rate are truly available at the intended prediction time.
+- Freeze the final feature specification.
+- Perform modest Ridge hyperparameter tuning only after the feature specification is finalized.
+- Package the final preprocessing and model pipeline after tuning.
