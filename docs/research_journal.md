@@ -2362,6 +2362,8 @@ Using `drop="first"` created an omitted reference category for each categorical 
 
 Categorical coefficients therefore represent differences relative to their omitted reference categories.
 
+This interpretability-oriented specification differs from the Day 12 Ridge pipeline because numerical variables are standardized and categorical variables use reference-category encoding. Its predictive performance therefore needs to be evaluated directly before treating it as the final deployment model.
+
 ### Coefficient Stability Analysis
 
 A separate Ridge pipeline was fit in each of the five group-aware folds.
@@ -2552,13 +2554,15 @@ Notebook/script:
 
 ### Key Conclusion
 
-Ridge Regression remains a strong deployment-oriented candidate because its most important numerical coefficients are stable across profile-separated folds.
+The interpretability-oriented Ridge specification shows stable coefficient signs for most transformed features across profile-separated folds.
 
 Stress Level and Age are the clearest stable numerical signals.
 
 Daily Steps appears weak and unstable, while a small number of occupation contrasts also change sign.
 
-The current 8-feature deployment specification will therefore be retained until the next model-selection step rather than being aggressively reduced based on coefficient magnitude alone.
+Because this standardized, reference-coded Ridge specification differs from the Day 12 predictive pipeline, its predictive performance must be re-evaluated on the same group-aware folds before final model selection.
+
+The current 8-feature deployment specification will therefore be retained provisionally rather than being reduced on coefficient magnitude alone.
 
 ### Next Steps
 

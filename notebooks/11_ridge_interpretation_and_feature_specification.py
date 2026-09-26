@@ -13,9 +13,38 @@ from sklearn.model_selection import GroupKFold
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
-PROJECT_ROOT = Path(
-    "/Users/home/Desktop/AthleteIQ/athleteiq-performance-prediction"
-)
+
+def find_project_root() -> Path:
+    search_starts = [
+        Path.cwd().resolve(),
+    ]
+
+    script_path = globals().get("__file__")
+
+    if isinstance(script_path, str):
+        search_starts.insert(
+            0,
+            Path(script_path).resolve().parent,
+        )
+
+    for start_path in search_starts:
+        for candidate_path in (
+            start_path,
+            *start_path.parents,
+        ):
+            if (
+                (candidate_path / ".git").exists()
+                and (candidate_path / "data").exists()
+                and (candidate_path / "notebooks").exists()
+            ):
+                return candidate_path
+
+    raise FileNotFoundError(
+        "Could not locate the AthleteIQ project root."
+    )
+
+
+PROJECT_ROOT = find_project_root()
 
 DATA_DIR = PROJECT_ROOT / "data" / "processed"
 REPORTS_DIR = PROJECT_ROOT / "reports"
@@ -159,8 +188,7 @@ print(
 
 
 # %%
-# CELL 5 — Build standardized Ridge pipeline
-
+# CELL 5 — Build interpretable standardized Ridge pipeline
 
 preprocessor = ColumnTransformer(
     transformers=[
@@ -173,7 +201,7 @@ preprocessor = ColumnTransformer(
             "categorical",
             OneHotEncoder(
                 handle_unknown="ignore",
-                drop=None,
+                drop="first",
             ),
             deployment_categorical_features,
         ),
@@ -196,7 +224,7 @@ ridge_pipeline = Pipeline(
 )
 
 print(
-    "Standardized Ridge pipeline ready."
+    "Interpretable standardized Ridge pipeline ready."
 )
 
 
@@ -469,47 +497,6 @@ print(
     len(
         coefficient_summary_df
     ),
-)
-
-
-# %%
-# CELL 5 — Build interpretable standardized Ridge pipeline
-
-preprocessor = ColumnTransformer(
-    transformers=[
-        (
-            "numeric",
-            StandardScaler(),
-            deployment_numeric_features,
-        ),
-        (
-            "categorical",
-            OneHotEncoder(
-                handle_unknown="ignore",
-                drop="first",
-            ),
-            deployment_categorical_features,
-        ),
-    ]
-)
-
-ridge_pipeline = Pipeline(
-    steps=[
-        (
-            "preprocessor",
-            preprocessor,
-        ),
-        (
-            "model",
-            Ridge(
-                alpha=1.0
-            ),
-        ),
-    ]
-)
-
-print(
-    "Interpretable standardized Ridge pipeline ready."
 )
 
 
@@ -994,6 +981,8 @@ Using `drop="first"` created an omitted reference category for each categorical 
 
 Categorical coefficients therefore represent differences relative to their omitted reference categories.
 
+This interpretability-oriented specification differs from the Day 12 Ridge pipeline because numerical variables are standardized and categorical variables use reference-category encoding. Its predictive performance therefore needs to be evaluated directly before treating it as the final deployment model.
+
 ### Coefficient Stability Analysis
 
 A separate Ridge pipeline was fit in each of the five group-aware folds.
@@ -1184,13 +1173,15 @@ Notebook/script:
 
 ### Key Conclusion
 
-Ridge Regression remains a strong deployment-oriented candidate because its most important numerical coefficients are stable across profile-separated folds.
+The interpretability-oriented Ridge specification shows stable coefficient signs for most transformed features across profile-separated folds.
 
 Stress Level and Age are the clearest stable numerical signals.
 
 Daily Steps appears weak and unstable, while a small number of occupation contrasts also change sign.
 
-The current 8-feature deployment specification will therefore be retained until the next model-selection step rather than being aggressively reduced based on coefficient magnitude alone.
+Because this standardized, reference-coded Ridge specification differs from the Day 12 predictive pipeline, its predictive performance must be re-evaluated on the same group-aware folds before final model selection.
+
+The current 8-feature deployment specification will therefore be retained provisionally rather than being reduced on coefficient magnitude alone.
 
 ### Next Steps
 
@@ -1291,7 +1282,7 @@ print(
 
 
 # %%
-# CELL 17 — Append Day 13 to research journal
+# CELL 17 — Update Day 13 research journal entry
 
 journal_path = (
     PROJECT_ROOT
@@ -1308,9 +1299,48 @@ day_13_heading = (
 )
 
 if day_13_heading in existing_journal:
-    print(
-        "Day 13 already exists in research journal."
+    day_13_start = existing_journal.index(
+        day_13_heading
     )
+
+    next_section_marker = (
+        "\n\n---\n\n## "
+    )
+
+    next_section_start = existing_journal.find(
+        next_section_marker,
+        day_13_start + len(day_13_heading),
+    )
+
+    if next_section_start == -1:
+        updated_journal = (
+            existing_journal[
+                :day_13_start
+            ].rstrip()
+            + "\n\n"
+            + journal_entry.strip()
+            + "\n"
+        )
+    else:
+        updated_journal = (
+            existing_journal[
+                :day_13_start
+            ]
+            + journal_entry.strip()
+            + existing_journal[
+                next_section_start:
+            ]
+        )
+
+    journal_path.write_text(
+        updated_journal,
+        encoding="utf-8",
+    )
+
+    print(
+        "Day 13 research journal entry updated."
+    )
+
 else:
     with journal_path.open(
         "a",

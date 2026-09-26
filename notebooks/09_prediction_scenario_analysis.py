@@ -20,9 +20,37 @@ from sklearn.model_selection import GroupKFold
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder
 
-PROJECT_ROOT = Path(
-    "/Users/home/Desktop/AthleteIQ/athleteiq-performance-prediction"
-)
+def find_project_root() -> Path:
+    search_starts = [
+        Path.cwd().resolve(),
+    ]
+
+    script_path = globals().get("__file__")
+
+    if isinstance(script_path, str):
+        search_starts.insert(
+            0,
+            Path(script_path).resolve().parent,
+        )
+
+    for start_path in search_starts:
+        for candidate_path in (
+            start_path,
+            *start_path.parents,
+        ):
+            if (
+                (candidate_path / ".git").exists()
+                and (candidate_path / "data").exists()
+                and (candidate_path / "notebooks").exists()
+            ):
+                return candidate_path
+
+    raise FileNotFoundError(
+        "Could not locate the AthleteIQ project root."
+    )
+
+
+PROJECT_ROOT = find_project_root()
 
 DATA_DIR = PROJECT_ROOT / "data" / "processed"
 REPORTS_DIR = PROJECT_ROOT / "reports"
